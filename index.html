@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantex API System</title>
+  <style>
+    body{font-family:Arial;background:#000;color:#0f0;margin:0;padding:0}
+    .container{max-width:600px;margin:50px auto;padding:30px;background:#111;border:2px solid #0f0;border-radius:15px}
+    input,button,select{width:100%;padding:14px;margin:10px 0;border:none;border-radius:8px;background:#222;color:#0f0;font-size:16px}
+    button{background:#0f0;color:#000;font-weight:bold;cursor:pointer}
+    button:hover{background:#0c0}
+    h1{text-align:center;color:#0f0;text-shadow:0 0 10px #0f0}
+    .hidden{display:none}
+    a{color:#0f0}
+  </style>
+</head>
+<body>
+  <div class="container" id="loginPage">
+    <h1>QUANTEX API SYSTEM</h1>
+    <input type="text" id="username" placeholder="Kullanıcı adı">
+    <input type="password" id="password" placeholder="Şifre">
+    <button onclick="giris()">GİRİŞ YAP</button>
+    <p style="text-align:center">Demo → admin / 12345</p>
+  </div>
+
+  <div class="container hidden" id="panel">
+    <h1>API PANELİ</h1>
+    <button onclick="cikis()" style="width:auto;padding:10px">Çıkış Yap</button>
+    <hr style="border-color:#0f0">
+    <input type="text" id="apiAdi" placeholder="API adı (örnek: telegram, netflix, spotify)">
+    <input type="file" id="txtDosya" accept=".txt">
+    <button onclick="apiOlustur()">API OLUŞTUR</button>
+    <div id="sonuc" style="margin-top:20px;word-break:break-all"></div>
+  </div>
+
+<script>
+const dogruKullanici = "admin";
+const dogruSifre = "12345";
+
+function giris(){
+  const k = document.getElementById("username").value;
+  const s = document.getElementById("password").value;
+  if(k === dogruKullanici && s === dogruSifre){
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+  }else alert("Yanlış kullanıcı adı veya şifre!");
+}
+
+function cikis(){
+  document.getElementById("panel").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+}
+
+function apiOlustur(){
+  const apiAdi = document.getElementById("apiAdi").value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const dosya = document.getElementById("txtDosya").files[0];
+  if(!apiAdi || !dosya) return alert("API adı ve TXT dosyası gir!");
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const satirlar = e.target.result.split('\n').map(line => line.trim()).filter(line => line).join("\n");
+
+    const formData = new FormData();
+    formData.append("apiAdi", apiAdi);
+    formData.append("icerik", satirlar);
+
+    fetch("upload.php", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById("sonuc").innerHTML = `
+        <b style="color:#0f0">API BAŞARIYLA OLUŞTURULDU!</b><br><br>
+        <a href="/api/${apiAdi}.php" target="_blank">
+          \( {window.location.origin}/api/ \){apiAdi}.php
+        </a><br><br>
+        <small>Bu linke girince TXT dosyan satır satır görünecek</small>`;
+    });
+  };
+  reader.readAsText(dosya);
+}
+</script>
+</body>
+</html>
